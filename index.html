@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>JabónCalc — Calculadora Artesanal</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JabónCalc">
+<meta name="theme-color" content="#2C1A0E">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --crema: #F5EFE6;
+  --crema-oscura: #EDE3D6;
+  --marron: #2C1A0E;
+  --marron-medio: #4A2E1A;
+  --terra: #C47D3E;
+  --terra-claro: #D4956A;
+  --terra-suave: #F5E6D6;
+  --blanco: #FFFDF9;
+  --texto: #2C1A0E;
+  --sub: #7A5C3E;
+  --borde: #DDD0BE;
+  --sombra: 0 2px 12px rgba(44,26,14,0.08);
+  --sombra-lg: 0 6px 24px rgba(44,26,14,0.14);
+}
+
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--crema);
+  color: var(--texto);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 80px;
+}
+
+.phone {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100vh;
+  background: var(--crema);
+}
+
+/* STATUS BAR */
+.status-bar {
+  background: var(--marron);
+  padding: 10px 20px 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(245,239,230,0.8);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* HEADER */
+.app-header {
+  background: var(--marron);
+  padding: 20px 20px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(196,125,62,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.app-header::after {
+  content: '🧼';
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  font-size: 100px;
+  opacity: 0.06;
+  transform: rotate(-15deg);
+}
+
+.app-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.app-logo { display: flex; align-items: center; gap: 12px; }
+
+.app-logo-icon {
+  width: 40px; height: 40px;
+  background: rgba(196,125,62,0.2);
+  border: 1px solid rgba(196,125,62,0.3);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.app-logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--crema);
+  letter-spacing: 0.3px;
+}
+
+.app-logo-sub { font-size: 11px; color: rgba(245,239,230,0.6); font-weight: 500; }
+
+.header-badge {
+  background: rgba(196,125,62,0.2);
+  color: var(--terra-claro);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(196,125,62,0.3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.header-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-stat {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(196,125,62,0.2);
+  border-radius: 3px;
+  padding: 10px;
+  text-align: center;
+}
+
+.header-stat-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--terra-claro);
+}
+
+.header-stat-lbl { font-size: 10px; color: rgba(245,239,230,0.55); font-weight: 500; margin-top: 2px; letter-spacing: 0.3px; }
+
+/* NAV */
+.nav {
+  background: var(--blanco);
+  display: flex;
+  border-bottom: 1px solid var(--borde);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(44,26,14,0.06);
+}
+
+.nav-btn {
+  flex: 1; padding: 14px 6px; border: none; background: none;
+  font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 600;
+  color: var(--sub); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: all 0.2s; position: relative;
+  letter-spacing: 0.3px;
+}
+
+.nav-btn.active { color: var(--terra); }
+
+.nav-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
+  height: 2px; background: var(--terra); border-radius: 2px 2px 0 0;
+}
+
+.nav-icon { font-size: 18px; }
+
+/* SCREENS */
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--blanco);
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--sombra);
+  border: 1px solid var(--borde);
+}
+
+.card-title {
+  font-size: 14px; font-weight: 700; color: var(--texto);
+  margin-bottom: 3px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.card-sub { font-size: 12px; color: var(--sub); margin-bottom: 16px; font-weight: 400; }
+
+/* INPUTS */
+.input-group { margin-bottom: 14px; }
+
+.input-label {
+  font-size: 11px; font-weight: 600; color: var(--sub);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block;
+}
+
+.input-wrap { position: relative; }
+
+.input-prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; font-weight: 600; color: var(--terra);
+}
+
+.input-suffix {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: var(--sub); font-weight: 600;
+}
+
+input[type=number], input[type=text] {
+  width: 100%; padding: 13px 16px;
+  border: 1px solid var(--borde); border-radius: 3px;
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--texto); background: var(--crema);
+  transition: all 0.2s; -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+input.has-prefix { padding-left: 30px; }
+input.has-suffix { padding-right: 40px; }
+
+input:focus {
+  outline: none; border-color: var(--terra); background: var(--blanco);
+  box-shadow: 0 0 0 3px rgba(196,125,62,0.1);
+}
+
+.input-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* INGREDIENTES */
+.ing-item {
+  background: var(--terra-suave);
+  border-radius: 3px; padding: 12px; margin-bottom: 8px;
+  border: 1px solid rgba(196,125,62,0.2);
+}
+
+.ing-row1 { margin-bottom: 8px; }
+
+.ing-row2 { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; }
+.ing-row2 input { font-size: 13px; padding: 9px 12px; }
+
+.btn-del {
+  width: 34px; height: 34px; border-radius: 3px; border: none;
+  background: rgba(196,125,62,0.15); color: var(--terra);
+  font-size: 14px; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; transition: background 0.2s;
+}
+
+.btn-del:active { background: rgba(196,125,62,0.3); }
+
+.ing-label { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; padding: 0 2px; margin-bottom: 4px; }
+.ing-label span { font-size: 10px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* BOTONES */
+.btn-add {
+  width: 100%; padding: 13px;
+  border: 1px dashed var(--terra); border-radius: 3px; background: none;
+  color: var(--terra); font-family: 'Jost', sans-serif; font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+.btn-add:active { background: var(--terra-suave); }
+
+.btn-calc {
+  width: 100%; padding: 17px; border: none; border-radius: 3px;
+  background: var(--marron); color: var(--crema);
+  font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
+  text-transform: uppercase; margin-top: 4px;
+  border-bottom: 3px solid var(--terra);
+}
+
+.btn-calc:active { transform: scale(0.99); opacity: 0.9; }
+
+/* RESULTADO HERO */
+.resultado-hero {
+  background: var(--marron);
+  border-radius: 4px; padding: 24px; margin-bottom: 12px;
+  text-align: center; box-shadow: var(--sombra-lg);
+  border-bottom: 3px solid var(--terra);
+}
+
+.resultado-hero-label { font-size: 10px; font-weight: 600; color: rgba(245,239,230,0.6); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+.resultado-hero-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px; font-weight: 700; color: var(--terra-claro); line-height: 1; margin-bottom: 6px;
+}
+.resultado-hero-sub { font-size: 13px; color: rgba(245,239,230,0.65); font-weight: 400; }
+
+/* MINI GRID */
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+.mini-card {
+  background: var(--blanco); border-radius: 4px; padding: 16px;
+  box-shadow: var(--sombra); text-align: center; border: 1px solid var(--borde);
+}
+
+.mini-card.terra { background: var(--terra-suave); border-color: rgba(196,125,62,0.25); }
+.mini-card.marron { background: var(--marron); border-color: var(--marron); }
+
+.mini-card-icon { font-size: 22px; margin-bottom: 6px; }
+.mini-card-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 700; color: var(--terra); line-height: 1; margin-bottom: 4px;
+}
+.mini-card.marron .mini-card-val { color: var(--terra-claro); }
+.mini-card-label { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+.mini-card.marron .mini-card-label { color: rgba(245,239,230,0.6); }
+
+/* SECTION LABEL */
+.section-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--terra); margin-bottom: 10px; padding-left: 2px;
+}
+
+/* PRECIO ROWS */
+.precio-row {
+  display: flex; align-items: center; padding: 14px 16px;
+  border-radius: 3px; margin-bottom: 6px; background: var(--blanco);
+  gap: 12px; border: 1px solid var(--borde);
+}
+
+.precio-row.recomendado {
+  background: var(--terra-suave);
+  border-color: var(--terra);
+  border-left: 3px solid var(--terra);
+}
+
+.precio-mult {
+  width: 40px; height: 40px; border-radius: 3px; background: var(--crema-oscura);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0; color: var(--sub);
+}
+
+.precio-row.recomendado .precio-mult { background: var(--marron); color: var(--terra-claro); font-family: 'Cormorant Garamond', serif; font-size: 15px; }
+
+.precio-info { flex: 1; }
+.precio-nombre { font-size: 13px; font-weight: 700; color: var(--texto); }
+.precio-desc { font-size: 11px; color: var(--sub); font-weight: 400; }
+.precio-monto { text-align: right; }
+.precio-val { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: var(--terra); }
+.precio-margen { font-size: 11px; color: var(--sub); font-weight: 500; }
+
+/* DESGLOSE */
+.desglose-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; border-bottom: 1px solid var(--crema-oscura); font-size: 13px;
+}
+
+.desglose-item:last-child { border-bottom: none; font-weight: 700; font-size: 14px; color: var(--terra); }
+.desglose-nombre { color: var(--sub); font-weight: 400; }
+.desglose-val { font-weight: 700; color: var(--texto); }
+
+/* TIP */
+.tip {
+  background: var(--terra-suave); border-radius: 3px; padding: 14px 16px;
+  display: flex; gap: 10px; align-items: flex-start;
+  border-left: 3px solid var(--terra);
+}
+
+.tip-icon { font-size: 20px; flex-shrink: 0; }
+.tip-text { font-size: 13px; line-height: 1.5; color: var(--texto); font-weight: 400; }
+
+/* PM ROWS */
+.precio-mercado-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid var(--crema-oscura); gap: 8px;
+}
+
+.precio-mercado-row:last-child { border-bottom: none; }
+.pm-nombre { font-size: 13px; font-weight: 500; flex: 1; color: var(--texto); }
+.pm-rango { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 700; color: var(--terra); text-align: right; white-space: nowrap; }
+
+/* PASO */
+.paso {
+  display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px;
+  background: var(--terra-suave); border-radius: 3px; margin-bottom: 8px;
+  border: 1px solid rgba(196,125,62,0.2);
+}
+
+.paso-num {
+  width: 34px; height: 34px; border-radius: 3px; background: var(--marron);
+  color: var(--terra-claro); font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.paso-titulo { font-size: 13px; font-weight: 700; margin-bottom: 3px; color: var(--texto); }
+.paso-desc { font-size: 12px; color: var(--sub); font-weight: 400; line-height: 1.4; }
+
+/* CHIP */
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 2px; font-size: 11px; font-weight: 600; }
+.chip-terra { background: var(--terra-suave); color: var(--terra); border: 1px solid rgba(196,125,62,0.2); }
+.chip-marron { background: var(--marron); color: var(--terra-claro); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>🧼 JabónCalc</span>
+    <span>●●●</span>
+  </div>
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-logo">
+        <div class="app-logo-icon">🧼</div>
+        <div>
+          <div class="app-logo-text">JabónCalc</div>
+          <div class="app-logo-sub">Calculadora artesanal</div>
+        </div>
+      </div>
+      <div class="header-badge">Bono 4</div>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="header-stat-val" id="stat-costo">$0</div>
+        <div class="header-stat-lbl">Costo/barra</div>
+      </div>
+      <div class="header-stat">
+        <div class="header-stat-val" id="stat-precio">$0</div>
+        <div class="header-stat-lbl">Precio 4x</div>
+      </div>
+      <div class="header-stat">
+        <div class="header-stat-val" id="stat-ganancia">$0</div>
+        <div class="header-stat-lbl">Ganancia/lote</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="goScreen('calc', this)">
+      <span class="nav-icon">🧮</span><span>Calcular</span>
+    </button>
+    <button class="nav-btn" onclick="goScreen('resultados', this)">
+      <span class="nav-icon">📊</span><span>Resultados</span>
+    </button>
+    <button class="nav-btn" onclick="goScreen('mercado', this)">
+      <span class="nav-icon">💰</span><span>Mercado</span>
+    </button>
+    <button class="nav-btn" onclick="goScreen('tips', this)">
+      <span class="nav-icon">💡</span><span>Consejos</span>
+    </button>
+  </div>
+
+  <!-- SCREEN: CALCULAR -->
+  <div id="screen-calc" class="screen active">
+    <div class="card">
+      <div class="card-title">📋 Tu jabón</div>
+      <div class="card-sub">Nombre y cantidad de barras por lote</div>
+      <div class="input-group">
+        <label class="input-label">Nombre del jabón</label>
+        <input type="text" id="nombre" placeholder="Ej: Jabón de café y naranja">
+      </div>
+      <div class="input-row-2">
+        <div class="input-group" style="margin:0">
+          <label class="input-label">Barras por lote</label>
+          <input type="number" id="barras" value="8" min="1">
+        </div>
+        <div class="input-group" style="margin:0">
+          <label class="input-label">Peso/barra (g)</label>
+          <input type="number" id="peso-barra" value="100" min="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌿 Ingredientes del lote</div>
+      <div class="card-sub">Carga cada ingrediente con su costo en pesos</div>
+      <div class="ing-label">
+        <span>Gramos/ml</span><span>$/kg o $/L</span><span></span>
+      </div>
+      <div id="ing-list"></div>
+      <button class="btn-add" onclick="addIng()">＋ Agregar ingrediente</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📦 Gastos del lote</div>
+      <div class="card-sub">Se reparten entre todas las barras</div>
+      <div class="input-row-2">
+        <div class="input-group">
+          <label class="input-label">Packaging/barra</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="packaging" value="350" class="has-prefix"></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Energía (lote)</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="energia" value="200" class="has-prefix"></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Horas de trabajo</label>
+          <div class="input-wrap"><input type="number" id="horas" value="2" step="0.5" class="has-suffix"><span class="input-suffix">hs</span></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Valor hora</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="valHora" value="3000" class="has-prefix"></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Comisión plat.</label>
+          <div class="input-wrap"><input type="number" id="comision" value="0" min="0" max="100" class="has-suffix"><span class="input-suffix">%</span></div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Otros (lote)</label>
+          <div class="input-wrap"><span class="input-prefix">$</span><input type="number" id="otros" value="0" class="has-prefix"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calcular()">Calcular precio de venta →</button>
+  </div>
+
+  <!-- SCREEN: RESULTADOS -->
+  <div id="screen-resultados" class="screen">
+    <div id="res-empty" class="card" style="text-align:center; padding:40px 20px;">
+      <div style="font-size:44px; margin-bottom:12px;">🧮</div>
+      <div style="font-size:15px; font-weight:700; margin-bottom:6px; font-family:'Cormorant Garamond',serif;">Todavía no calculaste</div>
+      <div style="font-size:13px; color:var(--sub);">Completa los datos en Calcular y presiona el botón</div>
+    </div>
+
+    <div id="res-content" class="hidden">
+      <div class="resultado-hero">
+        <div class="resultado-hero-label">Precio recomendado (4x)</div>
+        <div class="resultado-hero-val" id="r-precio4x">$0</div>
+        <div class="resultado-hero-sub" id="r-nombre-res">tu jabón</div>
+      </div>
+
+      <div class="mini-grid">
+        <div class="mini-card terra">
+          <div class="mini-card-icon">💰</div>
+          <div class="mini-card-val" id="r-costo">$0</div>
+          <div class="mini-card-label">Costo/barra</div>
+        </div>
+        <div class="mini-card marron">
+          <div class="mini-card-icon">📈</div>
+          <div class="mini-card-val" id="r-ganancia-lote">$0</div>
+          <div class="mini-card-label">Ganancia/lote</div>
+        </div>
+      </div>
+
+      <div class="section-label">Precios sugeridos</div>
+      <div id="tabla-precios"></div>
+
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title">🔍 Desglose de costos</div>
+        <div class="card-sub">Por barra individual</div>
+        <div id="desglose"></div>
+      </div>
+
+      <div class="tip" style="margin-top:4px;">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text" id="r-tip">Consejo personalizado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: MERCADO -->
+  <div id="screen-mercado" class="screen">
+    <div class="card">
+      <div class="card-title">💰 Precios de mercado</div>
+      <div class="card-sub">Referencia por tipo de jabón</div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Jabón básico</div><div class="pm-rango">$1.500–$4.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Con aceites esenciales</div><div class="pm-rango">$2.500–$6.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Jabón terapéutico ✅</div><div class="pm-rango">$4.000–$9.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Con activos premium ✅</div><div class="pm-rango">$5.000–$12.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Champú sólido ✅</div><div class="pm-rango">$4.500–$10.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Jabón para bebés ✅</div><div class="pm-rango">$5.000–$13.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Kit regalo (3 jabones) ✅</div><div class="pm-rango">$10.000–$28.000</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📦 Ingredientes — precios aprox.</div>
+      <div class="card-sub">Por kg o litro</div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de girasol</div><div class="pm-rango">$1.500–$2.500</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de oliva</div><div class="pm-rango">$3.000–$5.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de coco</div><div class="pm-rango">$4.000–$6.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de ricino</div><div class="pm-rango">$4.000–$7.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Manteca de karité</div><div class="pm-rango">$8.000–$15.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de almendras</div><div class="pm-rango">$6.000–$10.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceite de rosa mosqueta</div><div class="pm-rango">$12.000–$20.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Sosa cáustica</div><div class="pm-rango">$2.000–$4.000</div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Aceites esenciales</div><div class="pm-rango">$3.000–$15.000/100ml</div></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: CONSEJOS -->
+  <div id="screen-tips" class="screen">
+    <div class="card">
+      <div class="card-title">🎯 La regla de los 3x</div>
+      <div class="card-sub">El precio mínimo para no trabajar gratis</div>
+      <div class="paso"><div class="paso-num">1x</div><div><div class="paso-titulo">Costo de materiales</div><div class="paso-desc">Aceites, sosa, esencias, colorantes</div></div></div>
+      <div class="paso"><div class="paso-num">+1x</div><div><div class="paso-titulo">Tu tiempo y overhead</div><div class="paso-desc">Trabajo, packaging, energía, publicidad</div></div></div>
+      <div class="paso" style="border-color:var(--terra); border-width:2px;"><div class="paso-num">3x</div><div><div class="paso-titulo">Precio mínimo de venta</div><div class="paso-desc">Por debajo de esto estás regalando tu trabajo</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 Precio por canal</div>
+      <div class="card-sub">Ajusta según dónde vendes</div>
+      <div class="precio-mercado-row"><div class="pm-nombre">WhatsApp directo</div><div><span class="chip chip-terra">Sin ajuste</span></div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Instagram orgánico</div><div><span class="chip chip-terra">Sin ajuste</span></div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Mercado Libre</div><div><span class="chip chip-marron">+20 a 30%</span></div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Ferias y mercados</div><div><span class="chip chip-terra">-10 a 0%</span></div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Regalos corporativos</div><div><span class="chip chip-marron">+30 a 50%</span></div></div>
+      <div class="precio-mercado-row"><div class="pm-nombre">Revendedoras</div><div><span class="chip chip-terra">-30 a 40%</span></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Cómo justificar precio alto</div>
+      <div class="card-sub">5 técnicas que funcionan</div>
+      <div class="tip" style="margin-bottom:8px;"><div class="tip-icon">🌿</div><div class="tip-text"><strong>Ingredientes con nombre específico.</strong> No "aceites naturales" — sí "aceite de rosa mosqueta".</div></div>
+      <div class="tip" style="margin-bottom:8px;"><div class="tip-icon">🎯</div><div class="tip-text"><strong>Promesa concreta.</strong> No "jabón natural" — sí "jabón para acné con árbol de té".</div></div>
+      <div class="tip" style="margin-bottom:8px;"><div class="tip-icon">⏱️</div><div class="tip-text"><strong>El proceso como valor.</strong> "6 semanas de curado artesanal" suena más valioso que "hecho a mano".</div></div>
+      <div class="tip" style="margin-bottom:8px;"><div class="tip-icon">📸</div><div class="tip-text"><strong>Packaging cuidado.</strong> Papel kraft + etiqueta + hilo. La presentación vale tanto como el jabón.</div></div>
+      <div class="tip"><div class="tip-icon">🚫</div><div class="tip-text"><strong>Lo que NO tiene.</strong> Sin sulfatos, sin parabenos. Lo que falta es tan valioso como lo que hay.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let ingId = 0;
+
+const DEFAULT_INGS = [
+  { n: "Aceite de coco", g: 200, p: 5000 },
+  { n: "Aceite de oliva", g: 100, p: 4000 },
+  { n: "Aceite de ricino", g: 50, p: 5000 },
+  { n: "Sosa cáustica", g: 48, p: 3000 },
+  { n: "Agua destilada", g: 120, p: 500 },
+  { n: "Aceite esencial", g: 10, p: 80000 },
+];
+
+function addIng(n="", g="", p="") {
+  const id = ingId++;
+  const div = document.createElement("div");
+  div.className = "ing-item";
+  div.id = `ing-${id}`;
+  div.innerHTML = `
+    <div class="ing-row1">
+      <input type="text" placeholder="Nombre del ingrediente" value="${n}" style="font-size:13px; padding:9px 12px;">
+    </div>
+    <div class="ing-row2">
+      <div class="input-wrap">
+        <input type="number" placeholder="gramos" value="${g}" min="0" class="has-suffix" style="font-size:13px; padding:9px 12px;">
+        <span class="input-suffix" style="font-size:10px;">g</span>
+      </div>
+      <div class="input-wrap">
+        <span class="input-prefix" style="font-size:12px;">$</span>
+        <input type="number" placeholder="$/kg" value="${p}" min="0" class="has-prefix" style="font-size:13px; padding:9px 12px;">
+      </div>
+      <button class="btn-del" onclick="document.getElementById('ing-${id}').remove()">✕</button>
+    </div>
+  `;
+  document.getElementById("ing-list").appendChild(div);
+}
+
+function fmt(n) { return "$" + Math.round(n).toLocaleString("es-AR"); }
+
+function calcular() {
+  const nombre = document.getElementById("nombre").value || "tu jabón";
+  const barras = parseFloat(document.getElementById("barras").value) || 8;
+  const packaging = parseFloat(document.getElementById("packaging").value) || 0;
+  const energia = parseFloat(document.getElementById("energia").value) || 0;
+  const horas = parseFloat(document.getElementById("horas").value) || 0;
+  const valHora = parseFloat(document.getElementById("valHora").value) || 0;
+  const comision = parseFloat(document.getElementById("comision").value) || 0;
+  const otros = parseFloat(document.getElementById("otros").value) || 0;
+
+  let costoIng = 0;
+  let desgloseIng = [];
+  document.querySelectorAll("#ing-list .ing-item").forEach(item => {
+    const inputs = item.querySelectorAll("input");
+    const n = inputs[0].value || "Ingrediente";
+    const g = parseFloat(inputs[1].value) || 0;
+    const pk = parseFloat(inputs[2].value) || 0;
+    const c = (g / 1000) * pk;
+    costoIng += c;
+    if (g > 0) desgloseIng.push({ n, g, c });
+  });
+
+  const moObra = (horas * valHora) / barras;
+  const ener = energia / barras;
+  const otr = otros / barras;
+  const costoBase = (costoIng / barras) + packaging + moObra + ener + otr;
+  const costo = comision > 0 ? costoBase / (1 - comision / 100) : costoBase;
+
+  const p3 = Math.ceil(costo * 3 / 100) * 100;
+  const p4 = Math.ceil(costo * 4 / 100) * 100;
+  const p5 = Math.ceil(costo * 5 / 100) * 100;
+  const p6 = Math.ceil(costo * 6 / 100) * 100;
+
+  const m = x => ((x - costo) / x * 100).toFixed(0) + "%";
+  const gan = x => fmt((x - costo) * barras);
+
+  document.getElementById("stat-costo").textContent = fmt(costo);
+  document.getElementById("stat-precio").textContent = fmt(p4);
+  document.getElementById("stat-ganancia").textContent = fmt((p4 - costo) * barras);
+
+  document.getElementById("res-empty").classList.add("hidden");
+  document.getElementById("res-content").classList.remove("hidden");
+
+  document.getElementById("r-precio4x").textContent = fmt(p4);
+  document.getElementById("r-nombre-res").textContent = nombre + " · " + barras + " barras";
+  document.getElementById("r-costo").textContent = fmt(costo);
+  document.getElementById("r-ganancia-lote").textContent = fmt((p4 - costo) * barras);
+
+  const precios = [
+    { mult: "3x", label: "Precio mínimo", desc: "No bajar de acá", val: p3, rec: false },
+    { mult: "4x", label: "Recomendado", desc: "Ideal para lanzar", val: p4, rec: true },
+    { mult: "5x", label: "Premium", desc: "Para activos especiales", val: p5, rec: false },
+    { mult: "6x", label: "Lujo", desc: "Kit regalo o encargos", val: p6, rec: false },
+  ];
+
+  document.getElementById("tabla-precios").innerHTML = precios.map(p => `
+    <div class="precio-row ${p.rec ? 'recomendado' : ''}">
+      <div class="precio-mult">${p.mult}</div>
+      <div class="precio-info">
+        <div class="precio-nombre">${p.label}</div>
+        <div class="precio-desc">${p.desc} · Lote: ${gan(p.val)}</div>
+      </div>
+      <div class="precio-monto">
+        <div class="precio-val">${fmt(p.val)}</div>
+        <div class="precio-margen">${m(p.val)} margen</div>
+      </div>
+    </div>
+  `).join("");
+
+  let dHTML = desgloseIng.map(i => `
+    <div class="desglose-item">
+      <span class="desglose-nombre">${i.n} (${i.g}g)</span>
+      <span class="desglose-val">${fmt(i.c / barras)}</span>
+    </div>`).join("");
+
+  dHTML += `
+    <div class="desglose-item"><span class="desglose-nombre">Packaging</span><span class="desglose-val">${fmt(packaging)}</span></div>
+    <div class="desglose-item"><span class="desglose-nombre">Energía</span><span class="desglose-val">${fmt(ener)}</span></div>
+    <div class="desglose-item"><span class="desglose-nombre">Tu tiempo</span><span class="desglose-val">${fmt(moObra)}</span></div>
+  `;
+  if (otr > 0) dHTML += `<div class="desglose-item"><span class="desglose-nombre">Otros</span><span class="desglose-val">${fmt(otr)}</span></div>`;
+  if (comision > 0) dHTML += `<div class="desglose-item"><span class="desglose-nombre">Comisión ${comision}%</span><span class="desglose-val">${fmt(costo - costoBase)}</span></div>`;
+  dHTML += `<div class="desglose-item"><span>TOTAL POR BARRA</span><span class="desglose-val">${fmt(costo)}</span></div>`;
+  document.getElementById("desglose").innerHTML = dHTML;
+
+  let tip = "";
+  if (costo < 1000) tip = `Con ${fmt(costo)} de costo tienes mucho margen. A ${fmt(p4)} el jabón es competitivo y rentable. Con ingredientes premium puedes llegar a ${fmt(p6)}.`;
+  else if (costo < 3000) tip = `Costo sólido. A ${fmt(p4)} tienes un margen del ${m(p4)} que cubre imprevistos y publicidad. Nunca bajes de ${fmt(p3)}.`;
+  else tip = `Jabón con ingredientes de calidad. Comunica bien los activos en tu descripción — un comprador informado paga por lo que reconoce.`;
+  document.getElementById("r-tip").textContent = tip;
+
+  goScreen("resultados", document.querySelectorAll(".nav-btn")[1]);
+}
+
+function goScreen(id, btn) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("screen-" + id).classList.add("active");
+  btn.classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+DEFAULT_INGS.forEach(i => addIng(i.n, i.g, i.p));
+
+// PWA: Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('SW OK'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+
+// PWA: Banner instalar
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    const b = document.getElementById('install-banner');
+    if (b) b.style.display = 'flex';
+  }, 3000);
+});
+
+function installApp() {
+  const b = document.getElementById('install-banner');
+  if (b) b.style.display = 'none';
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  }
+}
+
+function closeInstall() {
+  const b = document.getElementById('install-banner');
+  if (b) b.style.display = 'none';
+}
+
+window.addEventListener('appinstalled', () => {
+  const b = document.getElementById('install-banner');
+  if (b) b.style.display = 'none';
+});
+</script>
+
+<!-- Banner instalacion PWA -->
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#2C1A0E;border-top:2px solid #C47D3E;padding:14px 16px;z-index:9999;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,0.4);max-width:420px;margin:0 auto;">
+  <div style="font-size:28px;">🧼</div>
+  <div style="flex:1;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:#F5EFE6;">Instalar JabónCalc</div>
+    <div style="font-size:11px;color:rgba(245,239,230,0.6);margin-top:2px;">Guardá la app en tu pantalla de inicio</div>
+  </div>
+  <button onclick="installApp()" style="background:#C47D3E;color:#fff;border:none;padding:9px 16px;border-radius:3px;font-family:'Jost',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">INSTALAR</button>
+  <button onclick="closeInstall()" style="background:none;border:none;color:rgba(245,239,230,0.4);font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;">✕</button>
+</div>
+
+</body>
+</html>
